@@ -26,11 +26,21 @@ var (
 //
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
+func removeEmptyStrings(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
 func getMatches(expression string) ([]string, error) {
 	var err error = nil
 
 	if strings.Trim(expression, " ") == "" {
-		return nil, fmt.Errorf("%s", errorEmptyInput)
+		return nil, errorEmptyInput
 	}
 
 	expressionWithoutSpaces := strings.ReplaceAll(expression, " ", "")
@@ -39,7 +49,15 @@ func getMatches(expression string) ([]string, error) {
 
 	matches := matchesRegex.FindStringSubmatch(expressionWithoutSpaces)
 
-	if matches == nil || len(matches[1:]) != 3 {
+	cleanedMatches := removeEmptyStrings(matches[1:])
+
+	for _, el := range cleanedMatches {
+		if matchesRegex.MatchString(el) {
+			return nil, errorNotTwoOperands
+		}
+	}
+
+	if matches == nil || len(cleanedMatches) != 3 {
 		return nil, errorNotTwoOperands
 	}
 
@@ -62,18 +80,18 @@ func parse(expression string) (string, error) {
 	result, err := getMatches(expression)
 
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", err
 	}
 
 	operator := result[1]
 	a, err := strconv.Atoi(result[0])
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", err
 	}
 
 	b, err := strconv.Atoi(result[2])
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", err
 	}
 
 	if operator == "+" {
@@ -89,7 +107,7 @@ func StringSum(input string) (output string, err error) {
 	output, err = parse(input)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s", err)
 	}
 
 	return output, nil
