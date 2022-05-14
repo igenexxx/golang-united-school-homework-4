@@ -101,7 +101,7 @@ func StringSum(input string) (output string, err error) {
 	output, err = parse(input)
 
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", fmt.Errorf("%w", err)
 	}
 
 	return output, nil
