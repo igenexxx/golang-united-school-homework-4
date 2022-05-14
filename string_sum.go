@@ -26,38 +26,28 @@ var (
 //
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
-func getMatches(expression string) (error, []string) {
+func getMatches(expression string) ([]string, error) {
 	var err error = nil
 
 	if strings.Trim(expression, " ") == "" {
-		return fmt.Errorf("%s", errorEmptyInput), nil
+		return nil, fmt.Errorf("%s", errorEmptyInput)
 	}
 
-	invalidExpr := regexp.MustCompile(`[^ \d+-]`)
+	expressionWithoutSpaces := strings.ReplaceAll(expression, " ", "")
 
-	if invalidExpr.MatchString(expression) {
-		return fmt.Errorf("invalid character"), nil
-	}
+	matchesRegex := regexp.MustCompile(`^(-?.*?)([-+])(.*?)$`)
 
-	cleanExprRegex := regexp.MustCompile(`[^\d+-]`)
-	matchesRegex := regexp.MustCompile(`(\+?-?\d+)([-+])(\+?-?\d+)`)
+	matches := matchesRegex.FindStringSubmatch(expressionWithoutSpaces)
 
-	cleanExpr := cleanExprRegex.ReplaceAllString(expression, "")
-	matches := matchesRegex.FindStringSubmatch(cleanExpr)
-
-	if matches == nil {
-		return fmt.Errorf("no matches"), nil
-	}
-
-	if len(matches[1:]) != 3 {
-		return fmt.Errorf("%s", errorNotTwoOperands), nil
+	if matches == nil || len(matches[1:]) != 3 {
+		return nil, errorNotTwoOperands
 	}
 
 	if matches != nil {
-		return nil, matches[1:]
+		return matches[1:], nil
 	}
 
-	return err, nil
+	return nil, err
 }
 
 func sum(a, b int) int {
@@ -69,15 +59,22 @@ func subtr(a, b int) int {
 }
 
 func parse(expression string) (string, error) {
-	err, result := getMatches(expression)
+	result, err := getMatches(expression)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s", err)
 	}
 
 	operator := result[1]
 	a, err := strconv.Atoi(result[0])
+	if err != nil {
+		return "", fmt.Errorf("%s", err)
+	}
+
 	b, err := strconv.Atoi(result[2])
+	if err != nil {
+		return "", fmt.Errorf("%s", err)
+	}
 
 	if operator == "+" {
 		return strconv.Itoa(sum(a, b)), nil
