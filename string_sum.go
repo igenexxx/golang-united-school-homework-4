@@ -26,16 +26,6 @@ var (
 //
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
-func removeEmptyStrings(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, str)
-		}
-	}
-	return r
-}
-
 func getMatches(expression string) ([]string, error) {
 	var err error = nil
 
@@ -45,11 +35,15 @@ func getMatches(expression string) ([]string, error) {
 
 	expressionWithoutSpaces := strings.ReplaceAll(expression, " ", "")
 
-	matchesRegex := regexp.MustCompile(`^(-?.*?)([-+])(.*?)$`)
+	matchesRegex := regexp.MustCompile(`^(-?.+)+([-+])+(.+?)$`)
 
 	matches := matchesRegex.FindStringSubmatch(expressionWithoutSpaces)
 
-	cleanedMatches := removeEmptyStrings(matches[1:])
+	if matches == nil {
+		return nil, errorNotTwoOperands
+	}
+
+	cleanedMatches := matches[1:]
 
 	for _, el := range cleanedMatches {
 		if matchesRegex.MatchString(el) {
@@ -57,7 +51,7 @@ func getMatches(expression string) ([]string, error) {
 		}
 	}
 
-	if matches == nil || len(cleanedMatches) != 3 {
+	if len(cleanedMatches) != 3 {
 		return nil, errorNotTwoOperands
 	}
 
